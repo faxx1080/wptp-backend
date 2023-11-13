@@ -56,8 +56,22 @@ public class App implements RequestHandler<Map, Map> {
             values.add(rs.getObject(1));
         }
 
+        /*
+        {
+            "isBase64Encoded": true|false,
+            "statusCode": httpStatusCode,
+            "headers": { "headername": "headervalue", ... },
+            "multiValueHeaders": { "headername": ["headervalue", "headervalue2", ...], ... },
+            "body": "..."
+        }
+        */
+
         return Map.of(
-                "values", values
+                "isBase64Encoded", false,
+                "statusCode", 200,
+                "headers", Map.of("Content-Type", "application/json"),
+                "multiValueHeaders", Collections.emptyMap(),
+                "body", "{\"test\": 1}"
         );
     }
 }
