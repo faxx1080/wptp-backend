@@ -39,6 +39,10 @@ public class GetQuestion implements RequestHandler<APIGatewayProxyRequestEvent, 
         String username = "your-username";
         String password = "your-password";
 
+        if ("POST".equals(input.getHttpMethod())) {
+            // blah
+        }
+
         Properties info = new Properties();
         info.put("user", username);
         info.put("password", password);
