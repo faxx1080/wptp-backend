@@ -58,9 +58,17 @@ Resources:
   RealAPI:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
+      VpcConfig:
+        SubnetIds:
+          - subnet-0d2ef23d5a80321ee
+          - subnet-022d637c32f724f6b
+        SecurityGroupIds:
+          - sg-0cccee1afe2649a03
+          - sg-053ff6236c99e0591
       CodeUri: HelloWorldFunction
       Handler: helloworld.GetQuestion::handleRequest
       Runtime: java17
+      Role: arn:aws:iam::135218218645:role/API-Role
       Architectures:
         - x86_64
       MemorySize: 512

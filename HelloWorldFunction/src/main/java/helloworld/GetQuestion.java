@@ -35,17 +35,15 @@ public class GetQuestion implements RequestHandler<APIGatewayProxyRequestEvent, 
         Class.forName("com.amazonaws.secretsmanager.sql.AWSSecretsManagerPostgreSQLDriver").newInstance();
 
         // Retrieve the connection info from the secret
-        String URL = "jdbc:postgresql://your-database-endpoint:5432/your-database-name";
-        String username = "your-username";
-        String password = "your-password";
+        String URL = "dvexam-rwuser";
 
         if ("POST".equals(input.getHttpMethod())) {
             // blah
         }
 
-        Properties info = new Properties();
-        info.put("user", username);
-        info.put("password", password);
+        // Populate the user property with the secret ARN to retrieve user and password from the secret
+        Properties info = new Properties( );
+        info.put( "user", "dvexam-rwuser" );
 
         log.debug("AAAA");
 
