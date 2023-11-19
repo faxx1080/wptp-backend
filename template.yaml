@@ -89,7 +89,7 @@ Outputs:
   # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
   HttpApiExample:
     Description: Endpoint for example API
-    Value: !GetAtt HttpApi.ApiEndpoint
+    Value: !GetAtt HttpApiExample.ApiEndpoint
   HttpApiReal:
     Description: Endpoint for real API
-    Value: !GetAtt HttpApi.ApiEndpoint
+    Value: !GetAtt HttpApiReal.ApiEndpoint
