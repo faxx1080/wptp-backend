@@ -7,10 +7,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.*;
 
 public class GetQuestion implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
@@ -47,7 +44,6 @@ public class GetQuestion implements RequestHandler<APIGatewayProxyRequestEvent, 
 
         log.debug("AAAA");
 
-        // Establish the connection
         try (Connection cxn = DriverManager.getConnection(URL, info);
              Statement st = cxn.createStatement();
              ResultSet rs = st.executeQuery("SELECT * FROM public.a")) {
@@ -58,6 +54,37 @@ public class GetQuestion implements RequestHandler<APIGatewayProxyRequestEvent, 
                 values.add(rs.getObject(1));
             }
 
+            // Process the results, if needed
+            // ...
+
+        } catch (SQLException e) {
+            log.error("SQL error occurred: ", e);
+            return new APIGatewayProxyResponseEvent()
+                    .withStatusCode(500)
+                    .withHeaders(Collections.singletonMap("Content-Type", "application/json"))
+                    .withBody("{\"error\": \"Internal Server Error\"}");
+        } catch (Exception e) {
+            log.error("An unexpected error occurred: ", e);
+            return new APIGatewayProxyResponseEvent()
+                    .withStatusCode(500)
+                    .withHeaders(Collections.singletonMap("Content-Type", "application/json"))
+                    .withBody("{\"error\": \"Internal Server Error\"}");
+        }
+        // Additional logic after processing ResultSet
+        log.debug("Received Request Event: {}", input);
+
+        // Extract referer information
+        String referer = input.getHeaders().get("referer");
+        log.debug("Received Referer: {}", referer);
+        log.debug("Referer ends with /api/get/question: {}", referer != null && referer.endsWith("/api/get/question"));
+
+        // Check if the referer matches the expected value
+        if (referer != null && referer.endsWith("/api/get/question")) {
+            return new APIGatewayProxyResponseEvent()
+                    .withStatusCode(200)
+                    .withHeaders(Collections.singletonMap("Content-Type", "application/json"))
+                    .withBody("{\"question\": \"What is the meaning of life?\", \"answer\": 42}");
+        } else { // Normal functionality
             return new APIGatewayProxyResponseEvent()
                     .withStatusCode(200)
                     .withHeaders(Collections.singletonMap("Content-Type", "application/json"))
