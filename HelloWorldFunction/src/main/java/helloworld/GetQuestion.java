@@ -85,10 +85,20 @@ public class GetQuestion implements RequestHandler<APIGatewayProxyRequestEvent, 
                     .withHeaders(Collections.singletonMap("Content-Type", "application/json"))
                     .withBody("{\"question\": \"What is the meaning of life?\", \"answer\": 42}");
         } else { // Normal functionality
+            // Create a JSON object with 4 choices
+            String questionJson = "{"
+                    + "\"question\": \"This is a question\", "
+                    + "\"answerA\": \"Choice A\", "
+                    + "\"answerB\": \"Choice B\", "
+                    + "\"answerC\": \"Choice C\", "
+                    + "\"answerD\": \"Choice D\""
+                    + "}";
+
+            // Return the APIGatewayProxyResponseEvent with the JSON body
             return new APIGatewayProxyResponseEvent()
                     .withStatusCode(200)
                     .withHeaders(Collections.singletonMap("Content-Type", "application/json"))
-                    .withBody("{\"test\": 2}");
+                    .withBody(questionJson);
         }
     }
 }
