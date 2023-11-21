@@ -42,7 +42,34 @@ Resources:
           - OPTIONS
           - POST
       Target: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${RealAPI}/invocations
+  HttpApiRealRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref HttpApiReal
+      RouteKey: 'ANY /{proxy+}'
+      Target: !Join
+        - /
+        - - integrations
+          - !Ref HttpApiRealIntegration
   # Lambda Function - uses Globals to define additional configuration values
+  HttpApiRealIntegration:
+    Type: 'AWS::ApiGatewayV2::Integration'
+    Properties:
+      ApiId: !Ref HttpApiReal
+      Description: Lambda Integration
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Join
+        - ''
+        - - 'arn:'
+          - !Ref 'AWS::Partition'
+          - ':apigateway:'
+          - !Ref 'AWS::Region'
+          - ':lambda:path/2015-03-31/functions/'
+          - !GetAtt RealAPI.Arn
+          - /invocations
+      IntegrationMethod: POST
+      PayloadFormatVersion: '2.0'
+
   HelloWorldFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
@@ -58,6 +85,9 @@ Resources:
   RealAPI:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
+      FunctionName: RealAPI
+      LoggingConfig:
+        LogGroup: /aws/lambda/RealAPI
       VpcConfig:
         SubnetIds:
           - subnet-0d2ef23d5a80321ee
@@ -67,6 +97,7 @@ Resources:
           - sg-053ff6236c99e0591
       CodeUri: HelloWorldFunction
       Handler: helloworld.GetQuestion::handleRequest
+      # Handler: helloworld.StreamHandler::handleRequest
       Runtime: java17
       Role: arn:aws:iam::135218218645:role/API-Role
       Architectures:
