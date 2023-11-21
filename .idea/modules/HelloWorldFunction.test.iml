@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module version="4">
+  <component name="AdditionalModuleElements">
+    <content url="file://$MODULE_DIR$/../../HelloWorldFunction/build/generated/sources/annotationProcessor/java/test">
+      <sourceFolder url="file://$MODULE_DIR$/../../HelloWorldFunction/build/generated/sources/annotationProcessor/java/test" isTestSource="true" generated="true" />
+    </content>
+    <content url="file://$MODULE_DIR$/../../HelloWorldFunction/src/test" dumb="true">
+      <sourceFolder url="file://$MODULE_DIR$/../../HelloWorldFunction/src/test/java" isTestSource="true" />
+    </content>
+  </component>
   <component name="SonarLintModuleSettings">
     <option name="uniqueId" value="9c69302d-26eb-430e-a7d5-2f4f16099e2d" />
   </component>

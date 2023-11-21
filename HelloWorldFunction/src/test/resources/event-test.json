@@ -1,0 +1,40 @@
+{
+  "version": "2.0",
+  "routeKey": "ANY /{proxy+}",
+  "rawPath": "/a/b/c",
+  "rawQueryString": "",
+  "headers": {
+    "accept": "*/*",
+    "content-length": "1",
+    "content-type": "text/plain",
+    "host": "9zybxdnqse.execute-api.us-east-1.amazonaws.com",
+    "user-agent": "curl/8.1.2",
+    "x-amzn-trace-id": "Root=1-655c0dd0-03624955663eae3332ac29a6",
+    "x-forwarded-for": "68.174.144.147",
+    "x-forwarded-port": "443",
+    "x-forwarded-proto": "https"
+  },
+  "requestContext": {
+    "accountId": "135218218645",
+    "apiId": "9zybxdnqse",
+    "domainName": "9zybxdnqse.execute-api.us-east-1.amazonaws.com",
+    "domainPrefix": "9zybxdnqse",
+    "http": {
+      "method": "POST",
+      "path": "/a/b/c",
+      "protocol": "HTTP/1.1",
+      "sourceIp": "68.174.144.147",
+      "userAgent": "curl/8.1.2"
+    },
+    "requestId": "OucYojytIAMESvg=",
+    "routeKey": "ANY /{proxy+}",
+    "stage": "$default",
+    "time": "21/Nov/2023:01:54:24 +0000",
+    "timeEpoch": 1700531664577
+  },
+  "pathParameters": {
+    "proxy": "a/b/c"
+  },
+  "body": "x",
+  "isBase64Encoded": false
+}

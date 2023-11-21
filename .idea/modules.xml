@@ -2,6 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/HelloWorldFunction.main.iml" filepath="$PROJECT_DIR$/.idea/modules/HelloWorldFunction.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/HelloWorldFunction.test.iml" filepath="$PROJECT_DIR$/.idea/modules/HelloWorldFunction.test.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/rds-test-01.iml" filepath="$PROJECT_DIR$/.idea/rds-test-01.iml" />
     </modules>
   </component>
