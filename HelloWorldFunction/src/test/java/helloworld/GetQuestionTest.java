@@ -2,11 +2,13 @@ package helloworld;
 
 import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPEvent;
 import com.amazonaws.services.lambda.runtime.tests.EventLoader;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import util.TestContext;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Slf4j
 class GetQuestionTest {
 
     @Test
@@ -15,6 +17,7 @@ class GetQuestionTest {
                 EventLoader.loadApiGatewayHttpEvent("event-test.json");
 
         var getQuestion = new GetQuestion();
-        getQuestion.handleRequest(httpEvent, new TestContext());
+        var output = getQuestion.handleRequest(httpEvent, new TestContext());
+        log.info("Output: {}", output);
     }
 }
