@@ -8,6 +8,8 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.sql.*;
 import java.util.*;
@@ -45,16 +47,32 @@ public class GetQuestion implements RequestHandler<APIGatewayV2HTTPEvent, APIGat
         // Populate the user property with the secret ARN to retrieve user and password from the secret
         Properties info = new Properties( );
         info.put( "user", "dvexam-rwuser" );
+        JSONArray jsonArray = new JSONArray();
 
         try (Connection cxn = DriverManager.getConnection(URL, info);
              Statement st = cxn.createStatement();
-             ResultSet rs = st.executeQuery("SELECT * FROM public.a")) {
+             ResultSet rs = st.executeQuery("SELECT * FROM public.questions")) {
 
-            List<Object> values = new ArrayList<>();
+            ResultSetMetaData metaData = rs.getMetaData();
+            int columnCount = metaData.getColumnCount();
+
             while (rs.next()) {
-                context.getLogger().log("Info: " + rs.getObject(1));
-                values.add(rs.getObject(1));
+                JSONObject jsonObject = new JSONObject();
+
+                for (int i = 1; i <= columnCount; i++) {
+                    String columnName = metaData.getColumnName(i);
+                    Object columnValue = rs.getObject(i);
+
+                    // Add each column to the JSON object dynamically
+                    jsonObject.put(columnName, columnValue);
+                }
+
+                jsonArray.put(jsonObject);
             }
+
+            // Print or use the JSON array as needed
+            System.out.println(jsonArray.toString());
+
 
             // Process the results, if needed
             // ...
@@ -77,25 +95,30 @@ public class GetQuestion implements RequestHandler<APIGatewayV2HTTPEvent, APIGat
 
         // Extract referer information
         String referer = input.getHeaders().get("referer");
-        log.debug("Received Referer: {}", referer);
-        log.debug("Referer ends with /api/get/question: {}", referer != null && referer.endsWith("/api/get/question"));
+//        log.debug("Received Referer: {}", referer);
+//        log.debug("Referer ends with /api/get/question: {}", referer != null && referer.endsWith("/api/get/question"));
 
         // Check if the referer matches the expected value
+        //public.questions
         if (referer != null && referer.endsWith("/api/get/question")) {
             return Util.responseBuilderOK(
                     Map.of("question", "What is the meaning of life?", "answer", "42"));
         } else { // Normal functionality
             // Create a JSON object with 4 choices
-
+            return APIGatewayV2HTTPResponse.builder()
+                    .withStatusCode(200)
+                    .withHeaders(Collections.singletonMap("Content-Type", "application/json"))
+                    .withBody(jsonArray.toString())
+                    .build();
             // Return the APIGatewayProxyResponseEvent with the JSON body
-            return Util.responseBuilderOK(
-                     Map.of(
-                             "question", "This is a question",
-                             "answerA", "Choice A",
-                             "answerB", "Choice B",
-                             "answerC", "Choice C",
-                             "answerD", "Choice D"
-                     ));
+//            return Util.responseBuilderOK(
+//                     Map.of(
+//                             "question", "This is a question",
+//                             "answerA", "Choice A",
+//                             "answerB", "Choice B",
+//                             "answerC", "Choice C",
+//                             "answerD", "Choice D"
+//                     ));
         }
     }
 }
