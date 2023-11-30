@@ -5,6 +5,11 @@
       <sourceFolder url="file://$MODULE_DIR$/../../HelloWorldFunction/build/generated/sources/annotationProcessor/java/main" isTestSource="false" generated="true" />
     </content>
   </component>
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$/../../HelloWorldFunction/build/generated/sources/annotationProcessor/java/main">
+      <sourceFolder url="file://$MODULE_DIR$/../../HelloWorldFunction/build/generated/sources/annotationProcessor/java/main" isTestSource="false" generated="true" />
+    </content>
+  </component>
   <component name="SonarLintModuleSettings">
     <option name="uniqueId" value="865abebd-07a1-4e9d-ac31-1114caaf505d" />
   </component>

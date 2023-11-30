@@ -17,12 +17,15 @@ dependencies {
     implementation 'com.amazonaws:aws-lambda-java-events:3.11.0'
     implementation 'org.postgresql:postgresql:42.6.0'
     implementation 'com.amazonaws.secretsmanager:aws-secretsmanager-jdbc:1.0.12'
+    implementation 'org.json:json:20231013'
+
 
     implementation 'org.apache.logging.log4j:log4j-api:[2.21.0,)'
     implementation 'org.apache.logging.log4j:log4j-core:[2.21.0,)'
     implementation "org.apache.logging.log4j:log4j-slf4j2-impl:2.21.0"
     runtimeOnly 'com.amazonaws:aws-lambda-java-log4j2:1.5.1'
 
+    //GSony
     implementation 'com.google.code.gson:gson:2.10.1'
 
 
@@ -31,6 +34,14 @@ dependencies {
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.10.0"
     testImplementation 'org.junit.platform:junit-platform-runner:1.10.1'
     testImplementation 'com.amazonaws:aws-lambda-java-tests:1.1.1'
+
+    // Lombok dependency
+    implementation 'org.projectlombok:lombok:1.18.22' // Use the latest version available
+    annotationProcessor 'org.projectlombok:lombok:1.18.22'
+
+    // SLF4J and Logback dependencies
+    implementation 'org.slf4j:slf4j-api:1.7.32' // Use the latest version available
+    implementation 'ch.qos.logback:logback-classic:1.2.3' // Use the latest version available
 }
 
 test {

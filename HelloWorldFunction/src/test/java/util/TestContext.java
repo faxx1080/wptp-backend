@@ -5,7 +5,9 @@ import com.amazonaws.services.lambda.runtime.CognitoIdentity;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Disabled;
 
+@Disabled
 public class TestContext implements Context {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestContext.class);
     @Override

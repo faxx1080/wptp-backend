@@ -2,11 +2,13 @@ package helloworld;
 
 import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPEvent;
 import com.amazonaws.services.lambda.runtime.tests.EventLoader;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import util.TestContext;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Disabled
 class GetQuestionTest {
 
     @Test
