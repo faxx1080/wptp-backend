@@ -31,22 +31,19 @@ public class GetQuestion implements RequestHandler<APIGatewayV2HTTPEvent, APIGat
 
     public APIGatewayV2HTTPResponse handleRequestInner(APIGatewayV2HTTPEvent input, Context context) throws Exception {
         Util.logEnv(input, context);
+        log.debug(input.getRequestContext().getHttp().getMethod());
 
-        if ("POST".equals(input.getRequestContext().getHttp().getMethod())) {
-            // blah
-        }
-
-        String path = input.getPathParameters().get("proxy");
-
-        if (path != null && path.contains("api/get/question")) {
+        if ("GET".equals(input.getRequestContext().getHttp().getMethod())) {
             return getQuestion();
         }
+//        if (path != null && path.contains("api/get/question")) {
+//            return getQuestion();
+//        }
 
         return APIGatewayV2HTTPResponse.builder()
                 .withStatusCode(404)
                 .withHeaders(Collections.singletonMap("Content-Type", "application/json"))
                 .withBody("{\"error\": \"Path Not Found\"}").build();
-
 
     }
 
