@@ -2,8 +2,6 @@ package helloworld;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPResponse;
 import org.slf4j.Logger;
@@ -34,15 +32,31 @@ public class GetQuestion implements RequestHandler<APIGatewayV2HTTPEvent, APIGat
     public APIGatewayV2HTTPResponse handleRequestInner(APIGatewayV2HTTPEvent input, Context context) throws Exception {
         Util.logEnv(input, context);
 
+        if ("POST".equals(input.getRequestContext().getHttp().getMethod())) {
+            // blah
+        }
+
+        String path = input.getPathParameters().get("proxy");
+
+        if (path != null && path.contains("api/get/question")) {
+            return getQuestion();
+        }
+
+        return APIGatewayV2HTTPResponse.builder()
+                .withStatusCode(404)
+                .withHeaders(Collections.singletonMap("Content-Type", "application/json"))
+                .withBody("{\"error\": \"Path Not Found\"}").build();
+
+
+    }
+
+    private APIGatewayV2HTTPResponse getQuestion() throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+        log.info("Entering getQuestion");
         // Load the JDBC driver
         Class.forName("com.amazonaws.secretsmanager.sql.AWSSecretsManagerPostgreSQLDriver").newInstance();
 
         // Retrieve the connection info from the secret
-        String URL = "dvexam-rwuser";
-
-        if ("POST".equals(input.getRequestContext().getHttp().getMethod())) {
-            // blah
-        }
+        final String URL = "dvexam-rwuser";
 
         // Populate the user property with the secret ARN to retrieve user and password from the secret
         Properties info = new Properties( );
@@ -71,8 +85,7 @@ public class GetQuestion implements RequestHandler<APIGatewayV2HTTPEvent, APIGat
             }
 
             // Print or use the JSON array as needed
-            System.out.println(jsonArray.toString());
-
+            log.info("{}", jsonArray);
 
             // Process the results, if needed
             // ...
@@ -90,35 +103,11 @@ public class GetQuestion implements RequestHandler<APIGatewayV2HTTPEvent, APIGat
                     .withHeaders(Collections.singletonMap("Content-Type", "application/json"))
                     .withBody("{\"error\": \"Internal Server Error\"}").build();
         }
-        // Additional logic after processing ResultSet
-        log.debug("Received Request Event: {}", input);
 
-        // Extract referer information
-        String referer = input.getHeaders().get("referer");
-//        log.debug("Received Referer: {}", referer);
-//        log.debug("Referer ends with /api/get/question: {}", referer != null && referer.endsWith("/api/get/question"));
-
-        // Check if the referer matches the expected value
-        //public.questions
-        if (referer != null && referer.endsWith("/api/get/question")) {
-            return Util.responseBuilderOK(
-                    Map.of("question", "What is the meaning of life?", "answer", "42"));
-        } else { // Normal functionality
-            // Create a JSON object with 4 choices
-            return APIGatewayV2HTTPResponse.builder()
-                    .withStatusCode(200)
-                    .withHeaders(Collections.singletonMap("Content-Type", "application/json"))
-                    .withBody(jsonArray.toString())
-                    .build();
-            // Return the APIGatewayProxyResponseEvent with the JSON body
-//            return Util.responseBuilderOK(
-//                     Map.of(
-//                             "question", "This is a question",
-//                             "answerA", "Choice A",
-//                             "answerB", "Choice B",
-//                             "answerC", "Choice C",
-//                             "answerD", "Choice D"
-//                     ));
-        }
+        return APIGatewayV2HTTPResponse.builder()
+                .withStatusCode(200)
+                .withHeaders(Collections.singletonMap("Content-Type", "application/json"))
+                .withBody(jsonArray.toString())
+                .build();
     }
 }

@@ -27,7 +27,7 @@ dependencies {
 
     //GSony
     implementation 'com.google.code.gson:gson:2.10.1'
-
+    implementation 'org.json:json:20231013'
 
     //    testImplementation(platform('org.junit:junit-bom:5.10.0'))
     testImplementation "org.junit.jupiter:junit-jupiter-api:5.10.0"

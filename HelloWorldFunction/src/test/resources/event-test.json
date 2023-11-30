@@ -33,7 +33,7 @@
     "timeEpoch": 1700531664577
   },
   "pathParameters": {
-    "proxy": "a/b/c"
+    "proxy": "api/get/question"
   },
   "body": "x",
   "isBase64Encoded": false
