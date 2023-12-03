@@ -32,9 +32,11 @@ public class GetQuestion implements RequestHandler<APIGatewayV2HTTPEvent, APIGat
         JSONObject responseBody = new JSONObject();
         responseBody.put("message", message);
 
+        Map<String, String> headers = getCorsHeaders();
+
         return APIGatewayV2HTTPResponse.builder()
                 .withStatusCode(200)
-                .withHeaders(Collections.singletonMap("Content-Type", "application/json"))
+                .withHeaders(headers)
                 .withBody(responseBody.toString())
                 .build();
     }
@@ -43,11 +45,21 @@ public class GetQuestion implements RequestHandler<APIGatewayV2HTTPEvent, APIGat
         JSONObject responseBody = new JSONObject();
         responseBody.put("error", errorMessage);
 
+        Map<String, String> headers = getCorsHeaders();
+
         return APIGatewayV2HTTPResponse.builder()
                 .withStatusCode(500)
-                .withHeaders(Collections.singletonMap("Content-Type", "application/json"))
+                .withHeaders(headers)
                 .withBody(responseBody.toString())
                 .build();
+    }
+
+    private Map<String, String> getCorsHeaders() {
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Access-Control-Allow-Origin", "*"); // Allow requests from any origin
+        headers.put("Access-Control-Allow-Headers", "Content-Type");
+        headers.put("Access-Control-Allow-Methods", "OPTIONS,POST,GET"); // Add other HTTP methods if needed
+        return headers;
     }
 
 
@@ -64,14 +76,25 @@ public class GetQuestion implements RequestHandler<APIGatewayV2HTTPEvent, APIGat
         }
     }
 
+    private APIGatewayV2HTTPResponse handleOptionsRequest() {
+        Map<String, String> headers = getCorsHeaders();
+        return APIGatewayV2HTTPResponse.builder()
+                .withStatusCode(200)
+                .withHeaders(headers)
+                .build();
+    }
+
     public APIGatewayV2HTTPResponse handleRequestInner(APIGatewayV2HTTPEvent input, Context context) throws Exception {
         Util.logEnv(input, context);
         log.debug(input.getRequestContext().getHttp().getMethod());
 
-        if ("GET".equals(input.getRequestContext().getHttp().getMethod())) {
+
+        if ("OPTIONS".equals(input.getRequestContext().getHttp().getMethod())) {
+            // Handle pre-flight OPTIONS request
+            return handleOptionsRequest();
+        } else if ("GET".equals(input.getRequestContext().getHttp().getMethod())) {
             return getQuestion();
-        }
-        else if ("POST".equals(input.getRequestContext().getHttp().getMethod())) {
+        } else if ("POST".equals(input.getRequestContext().getHttp().getMethod())) {
             // Retrieve data from the HTTP request
             Map<String, String> body = parseJsonBody(input.getBody());
 
