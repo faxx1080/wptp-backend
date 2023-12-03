@@ -105,7 +105,7 @@ public class GetQuestion implements RequestHandler<APIGatewayV2HTTPEvent, APIGat
 
         try (Connection cxn = DriverManager.getConnection(URL, info);
              Statement st = cxn.createStatement();
-             ResultSet rs = st.executeQuery("SELECT * FROM public.questions")) {
+             ResultSet rs = st.executeQuery("SELECT * FROM public.question")) {
 
             ResultSetMetaData metaData = rs.getMetaData();
             int columnCount = metaData.getColumnCount();
@@ -165,7 +165,7 @@ public class GetQuestion implements RequestHandler<APIGatewayV2HTTPEvent, APIGat
 
             try (Connection cxn = DriverManager.getConnection(URL, info)) {
                 // Create a PreparedStatement to insert a new question
-                String insertQuery = "INSERT INTO public.questions ("
+                String insertQuery = "INSERT INTO public.question ("
                         + "id, correctanswerchoice, difficulty, questiontext, "
                         + "choiceatext, choicebtext, choicectext, choicedtext, choiceetext, "
                         + "questiontype, section, answerexplanation, "
