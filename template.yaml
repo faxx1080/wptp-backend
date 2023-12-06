@@ -18,14 +18,6 @@ Resources:
       Name: apigw-http-example
       Description: API Gateway for backend - example
       ProtocolType: HTTP
-      CorsConfiguration:
-        AllowOrigins:
-          - '*'
-        AllowMethods:
-          - GET
-          - HEAD
-          - OPTIONS
-          - POST
       Target: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${HelloWorldFunction}/invocations
   HttpApiReal:
     Type: 'AWS::ApiGatewayV2::Api'
@@ -33,14 +25,6 @@ Resources:
       Name: apigw-http-backendapi
       Description: API Gateway for backend
       ProtocolType: HTTP
-      CorsConfiguration:
-        AllowOrigins:
-          - '*'
-        AllowMethods:
-          - GET
-          - HEAD
-          - OPTIONS
-          - POST
       Target: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${RealAPI}/invocations
   HttpApiRealRoute:
     Type: AWS::ApiGatewayV2::Route
