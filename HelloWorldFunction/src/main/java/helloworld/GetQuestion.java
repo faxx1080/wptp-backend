@@ -56,8 +56,10 @@ public class GetQuestion implements RequestHandler<APIGatewayV2HTTPEvent, APIGat
 
     private Map<String, String> getCorsHeaders() {
         Map<String, String> headers = new HashMap<>();
-        headers.put("Access-Control-Allow-Origin", "*"); // Allow requests from any origin
+        headers.put("Access-Control-Allow-Origin", "https://main.d3t0eddq8sk7xv.amplifyapp.com"); // Allow requests from site
         headers.put("Access-Control-Allow-Headers", "Content-Type");
+        headers.put("Access-Control-Expose-Headers", "*");
+        headers.put("Access-Control-Allow-Credentials", "true");
         headers.put("Access-Control-Allow-Methods", "OPTIONS,POST,GET"); // Add other HTTP methods if needed
         return headers;
     }
