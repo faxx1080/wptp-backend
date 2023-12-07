@@ -11,8 +11,25 @@ import org.json.JSONObject;
 
 import java.sql.*;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static java.awt.SystemColor.text;
 
 public class GetQuestion implements RequestHandler<APIGatewayV2HTTPEvent, APIGatewayV2HTTPResponse> {
+
+    @Override
+    public APIGatewayV2HTTPResponse handleRequest(APIGatewayV2HTTPEvent input, Context context) {
+        try {
+            return handleRequestInner(input, context);
+        } catch (Exception e) {
+            log.error("An error occurred: ", e);
+            return APIGatewayV2HTTPResponse.builder()
+                    .withStatusCode(500)
+                    .withHeaders(Collections.singletonMap("Content-Type", "application/json"))
+                    .withBody("{\"error\": \"Internal Server Error\"}").build();
+        }
+    }
 
     private static final Logger log = LoggerFactory.getLogger(GetQuestion.class);
 
@@ -65,18 +82,7 @@ public class GetQuestion implements RequestHandler<APIGatewayV2HTTPEvent, APIGat
     }
 
 
-    @Override
-    public APIGatewayV2HTTPResponse handleRequest(APIGatewayV2HTTPEvent input, Context context) {
-        try {
-            return handleRequestInner(input, context);
-        } catch (Exception e) {
-            log.error("An error occurred: ", e);
-            return APIGatewayV2HTTPResponse.builder()
-                    .withStatusCode(500)
-                    .withHeaders(Collections.singletonMap("Content-Type", "application/json"))
-                    .withBody("{\"error\": \"Internal Server Error\"}").build();
-        }
-    }
+
 
     private APIGatewayV2HTTPResponse handleOptionsRequest() {
         Map<String, String> headers = getCorsHeaders();
@@ -95,7 +101,7 @@ public class GetQuestion implements RequestHandler<APIGatewayV2HTTPEvent, APIGat
             // Handle pre-flight OPTIONS request
             return handleOptionsRequest();
         } else if ("GET".equals(input.getRequestContext().getHttp().getMethod())) {
-            return getQuestion();
+            return getQuestion(input, context);
         } else if ("POST".equals(input.getRequestContext().getHttp().getMethod())) {
             // Retrieve data from the HTTP request
             Map<String, String> body = parseJsonBody(input.getBody());
@@ -115,7 +121,7 @@ public class GetQuestion implements RequestHandler<APIGatewayV2HTTPEvent, APIGat
 
     }
 
-    private APIGatewayV2HTTPResponse getQuestion() throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+    private APIGatewayV2HTTPResponse getQuestion(APIGatewayV2HTTPEvent input, Context context) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
         log.info("Entering getQuestion");
         // Load the JDBC driver
         Class.forName("com.amazonaws.secretsmanager.sql.AWSSecretsManagerPostgreSQLDriver").newInstance();
@@ -127,6 +133,26 @@ public class GetQuestion implements RequestHandler<APIGatewayV2HTTPEvent, APIGat
         Properties info = new Properties( );
         info.put( "user", "dvexam-rwuser" );
         JSONArray jsonArray = new JSONArray();
+
+        String userUrl = input.getPathParameters().get("proxy").toString();
+
+        // /api/exam/1/question/1,2,
+        if (userUrl.startsWith("api/exam/")) {
+            Pattern pattern = Pattern.compile("^api/exam/(\\d+)/question/(\\d+)$");
+            Matcher matcher = pattern.matcher(userUrl);
+            var found = matcher.find();
+            if (!found) {
+                throw new RuntimeException("Wrong path");
+            }
+            var examIdS = matcher.group(1);
+            int examId = Integer.parseInt(examIdS.trim());
+            var questionIdS = matcher.group(2);
+            int questionId = Integer.parseInt(questionIdS.trim());
+            Map<String, Object> question = getQuestionFromExam(examId, questionId);
+
+            // return as json
+        }
+
 
         try (Connection cxn = DriverManager.getConnection(URL, info);
              Statement st = cxn.createStatement();
