@@ -4,6 +4,8 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPResponse;
+import helloworld.controller.Router;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.json.JSONArray;
@@ -14,8 +16,9 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static java.awt.SystemColor.text;
+import static helloworld.util.Util.*;
 
+@Slf4j
 public class GetQuestion implements RequestHandler<APIGatewayV2HTTPEvent, APIGatewayV2HTTPResponse> {
 
     @Override
@@ -30,8 +33,6 @@ public class GetQuestion implements RequestHandler<APIGatewayV2HTTPEvent, APIGat
                     .withBody("{\"error\": \"Internal Server Error\"}").build();
         }
     }
-
-    private static final Logger log = LoggerFactory.getLogger(GetQuestion.class);
 
     private Map<String, String> parseJsonBody(String jsonBody) {
         JSONObject jsonObject = new JSONObject(jsonBody);
@@ -71,18 +72,6 @@ public class GetQuestion implements RequestHandler<APIGatewayV2HTTPEvent, APIGat
                 .build();
     }
 
-    private Map<String, String> getCorsHeaders() {
-        Map<String, String> headers = new HashMap<>();
-        headers.put("Access-Control-Allow-Origin", "https://main.d3t0eddq8sk7xv.amplifyapp.com"); // Allow requests from site
-        headers.put("Access-Control-Allow-Headers", "Content-Type");
-        headers.put("Access-Control-Expose-Headers", "*");
-        headers.put("Access-Control-Allow-Credentials", "true");
-        headers.put("Access-Control-Allow-Methods", "OPTIONS,POST,GET"); // Add other HTTP methods if needed
-        return headers;
-    }
-
-
-
 
     private APIGatewayV2HTTPResponse handleOptionsRequest() {
         Map<String, String> headers = getCorsHeaders();
@@ -93,7 +82,7 @@ public class GetQuestion implements RequestHandler<APIGatewayV2HTTPEvent, APIGat
     }
 
     public APIGatewayV2HTTPResponse handleRequestInner(APIGatewayV2HTTPEvent input, Context context) throws Exception {
-        Util.logEnv(input, context);
+        logEnv(input, context);
         log.debug(input.getRequestContext().getHttp().getMethod());
 
 
@@ -121,66 +110,21 @@ public class GetQuestion implements RequestHandler<APIGatewayV2HTTPEvent, APIGat
 
     }
 
-    private APIGatewayV2HTTPResponse getQuestion(APIGatewayV2HTTPEvent input, Context context) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+    private APIGatewayV2HTTPResponse getQuestion(APIGatewayV2HTTPEvent input, Context context) throws Exception {
         log.info("Entering getQuestion");
-        // Load the JDBC driver
-        Class.forName("com.amazonaws.secretsmanager.sql.AWSSecretsManagerPostgreSQLDriver").newInstance();
 
-        // Retrieve the connection info from the secret
-        final String URL = "dvexam-rwuser";
+        JSONArray jsonArray;
 
-        // Populate the user property with the secret ARN to retrieve user and password from the secret
-        Properties info = new Properties( );
-        info.put( "user", "dvexam-rwuser" );
-        JSONArray jsonArray = new JSONArray();
-
-        String userUrl = input.getPathParameters().get("proxy").toString();
-
-        // /api/exam/1/question/1,2,
-        if (userUrl.startsWith("api/exam/")) {
-            Pattern pattern = Pattern.compile("^api/exam/(\\d+)/question/(\\d+)$");
-            Matcher matcher = pattern.matcher(userUrl);
-            var found = matcher.find();
-            if (!found) {
-                throw new RuntimeException("Wrong path");
+        try {
+            var output = Router.handleRoute(input);
+            if (output instanceof APIGatewayV2HTTPResponse casted) {
+                return casted;
+            } else if (output instanceof JSONArray casted) {
+                jsonArray = casted;
+            } else {
+                jsonArray = new JSONArray();
+                jsonArray.put(output);
             }
-            var examIdS = matcher.group(1);
-            int examId = Integer.parseInt(examIdS.trim());
-            var questionIdS = matcher.group(2);
-            int questionId = Integer.parseInt(questionIdS.trim());
-            Map<String, Object> question = getQuestionFromExam(examId, questionId);
-
-            // return as json
-        }
-
-
-        try (Connection cxn = DriverManager.getConnection(URL, info);
-             Statement st = cxn.createStatement();
-             ResultSet rs = st.executeQuery("SELECT * FROM public.question")) {
-
-            ResultSetMetaData metaData = rs.getMetaData();
-            int columnCount = metaData.getColumnCount();
-
-            while (rs.next()) {
-                JSONObject jsonObject = new JSONObject();
-
-                for (int i = 1; i <= columnCount; i++) {
-                    String columnName = metaData.getColumnName(i);
-                    Object columnValue = rs.getObject(i);
-
-                    // Add each column to the JSON object dynamically
-                    jsonObject.put(columnName, columnValue);
-                }
-
-                jsonArray.put(jsonObject);
-            }
-
-            // Print or use the JSON array as needed
-            log.info("{}", jsonArray);
-
-            // Process the results, if needed
-            // ...
-
         } catch (SQLException e) {
             log.error("SQL error occurred: ", e);
             return APIGatewayV2HTTPResponse.builder()
@@ -198,56 +142,45 @@ public class GetQuestion implements RequestHandler<APIGatewayV2HTTPEvent, APIGat
         return APIGatewayV2HTTPResponse.builder()
                 .withStatusCode(200)
                 .withHeaders(Collections.singletonMap("Content-Type", "application/json"))
-                .withBody(jsonArray.toString())
+                .withBody(jsonArray.toString()) // TODO: Fix data types
                 .build();
     }
 
-    private APIGatewayV2HTTPResponse postQuestion(Map<String, String> body) {
+    private APIGatewayV2HTTPResponse postQuestion(Map<String, String> body) throws SQLException {
         log.info("Entering postQuestion");
 
-        try {
-            // Load the JDBC driver
-            Class.forName("com.amazonaws.secretsmanager.sql.AWSSecretsManagerPostgreSQLDriver").newInstance();
+        // TODO: Refactor into controller
 
-            // Retrieve the connection info from the secret
-            final String URL = "dvexam-rwuser";
-            Properties info = new Properties();
-            info.put("user", "dvexam-rwuser");
+        try (Connection cxn = getDatabase()) {
+            // Create a PreparedStatement to insert a new question
+            String insertQuery = "INSERT INTO public.question ("
+                    + "id, correctanswerchoice, difficulty, questiontext, "
+                    + "choiceatext, choicebtext, choicectext, choicedtext, choiceetext, "
+                    + "questiontype, section, answerexplanation, "
+                    + "categoriesalgebra, categoriesgeometry, imagelink, "
+                    + "equations, correctanswertext, imagesolutionlink"
+                    + ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-            try (Connection cxn = DriverManager.getConnection(URL, info)) {
-                // Create a PreparedStatement to insert a new question
-                String insertQuery = "INSERT INTO public.question ("
-                        + "id, correctanswerchoice, difficulty, questiontext, "
-                        + "choiceatext, choicebtext, choicectext, choicedtext, choiceetext, "
-                        + "questiontype, section, answerexplanation, "
-                        + "categoriesalgebra, categoriesgeometry, imagelink, "
-                        + "equations, correctanswertext, imagesolutionlink"
-                        + ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            try (PreparedStatement pst = cxn.prepareStatement(insertQuery)) {
+                // Set parameters for the PreparedStatement using values from the Map
+                int i = 1;
+                for (String key : body.keySet()) {
+                    pst.setString(i++, body.get(key));
+                }
 
-                try (PreparedStatement pst = cxn.prepareStatement(insertQuery)) {
-                    // Set parameters for the PreparedStatement using values from the Map
-                    int i = 1;
-                    for (String key : body.keySet()) {
-                        pst.setString(i++, body.get(key));
-                    }
+                // Execute the update
+                int rowsAffected = pst.executeUpdate();
 
-                    // Execute the update
-                    int rowsAffected = pst.executeUpdate();
-
-                    if (rowsAffected > 0) {
-                        log.info("Question added successfully");
-                        return createSuccessResponse("Question added successfully");
-                    } else {
-                        log.error("Failed to add question");
-                        return createErrorResponse("Failed to add question");
-                    }
+                if (rowsAffected > 0) {
+                    log.info("Question added successfully");
+                    return createSuccessResponse("Question added successfully");
+                } else {
+                    log.error("Failed to add question");
+                    return createErrorResponse("Failed to add question");
                 }
             }
-
-        } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | SQLException e) {
-            log.error("An unexpected error occurred: ", e);
-            return createErrorResponse("Internal Server Error");
         }
+
     }
 
 }
