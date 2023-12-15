@@ -96,12 +96,8 @@ public class GetQuestion implements RequestHandler<APIGatewayV2HTTPEvent, APIGat
             Map<String, String> body = parseJsonBody(input.getBody());
 
             // Call the postQuestion method with the extracted values
-            return postQuestion(body);
+            return postQuestion(input, body, context);
         }
-
-//        if (path != null && path.contains("api/get/question")) {
-//            return getQuestion();
-//        }
 
         return APIGatewayV2HTTPResponse.builder()
                 .withStatusCode(404)
@@ -146,41 +142,40 @@ public class GetQuestion implements RequestHandler<APIGatewayV2HTTPEvent, APIGat
                 .build();
     }
 
-    private APIGatewayV2HTTPResponse postQuestion(Map<String, String> body) throws SQLException {
+    private APIGatewayV2HTTPResponse postQuestion(APIGatewayV2HTTPEvent input, Map<String, String> body, Context context) throws Exception {
         log.info("Entering postQuestion");
 
-        // TODO: Refactor into controller
+        JSONArray jsonArray;
 
-        try (Connection cxn = getDatabase()) {
-            // Create a PreparedStatement to insert a new question
-            String insertQuery = "INSERT INTO public.question ("
-                    + "id, correctanswerchoice, difficulty, questiontext, "
-                    + "choiceatext, choicebtext, choicectext, choicedtext, choiceetext, "
-                    + "questiontype, section, answerexplanation, "
-                    + "categoriesalgebra, categoriesgeometry, imagelink, "
-                    + "equations, correctanswertext, imagesolutionlink"
-                    + ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
-            try (PreparedStatement pst = cxn.prepareStatement(insertQuery)) {
-                // Set parameters for the PreparedStatement using values from the Map
-                int i = 1;
-                for (String key : body.keySet()) {
-                    pst.setString(i++, body.get(key));
-                }
-
-                // Execute the update
-                int rowsAffected = pst.executeUpdate();
-
-                if (rowsAffected > 0) {
-                    log.info("Question added successfully");
-                    return createSuccessResponse("Question added successfully");
-                } else {
-                    log.error("Failed to add question");
-                    return createErrorResponse("Failed to add question");
-                }
+        try {
+            var output = Router.handleRoute(input);
+            if (output instanceof APIGatewayV2HTTPResponse casted) {
+                return casted;
+            } else if (output instanceof JSONArray casted) {
+                jsonArray = casted;
+            } else {
+                jsonArray = new JSONArray();
+                jsonArray.put(output);
             }
+        } catch (SQLException e) {
+            log.error("SQL error occurred: ", e);
+            return APIGatewayV2HTTPResponse.builder()
+                    .withStatusCode(500)
+                    .withHeaders(Collections.singletonMap("Content-Type", "application/json"))
+                    .withBody("{\"error\": \"Internal Server Error\"}").build();
+        } catch (Exception e) {
+            log.error("An unexpected error occurred: ", e);
+            return APIGatewayV2HTTPResponse.builder()
+                    .withStatusCode(500)
+                    .withHeaders(Collections.singletonMap("Content-Type", "application/json"))
+                    .withBody("{\"error\": \"Internal Server Error\"}").build();
         }
 
+        return APIGatewayV2HTTPResponse.builder()
+                .withStatusCode(200)
+                .withHeaders(Collections.singletonMap("Content-Type", "application/json"))
+                .withBody(jsonArray.toString()) // TODO: Fix data types
+                .build();
     }
 
 }
