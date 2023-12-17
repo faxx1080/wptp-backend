@@ -1,9 +1,7 @@
 package helloworld.controller;
 
 import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPEvent;
-import helloworld.controller.implementation.CAllQuestions;
-import helloworld.controller.implementation.CQuestionOnExam;
-import helloworld.controller.implementation.PAnswerOnExam;
+import helloworld.controller.implementation.*;
 import helloworld.util.Util;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
@@ -26,18 +24,15 @@ public class Router {
         String requestBody = input.getBody();
 
         if ("GET".equals(method)) {
+            //Returns ALL Questions
             if (url.equals("api/questions/all")) {
                 return new CAllQuestions().handle(null);
             }
 
+            // Returns Specified Question
             // /api/exam/1/question/1,2,...
-            if (url.startsWith("api/exam/")) {
-                Pattern pattern = Pattern.compile("^api/exam/(\\d+)/question/(\\d+)$");
-                Matcher matcher = pattern.matcher(url);
-                var found = matcher.find();
-                if (!found) {
-                    throw new RuntimeException("Wrong path");
-                }
+            else if (url.startsWith("api/exam/")) {
+                Matcher matcher = generateMatcher(url, "^api/exam/(\\d+)/question/(\\d+)$");
                 var examIdS = matcher.group(1);
                 int examId = Integer.parseInt(examIdS.trim());
                 var questionNumbers = matcher.group(2);
@@ -48,58 +43,80 @@ public class Router {
                         "questionNumber", questionNumber
                 ));
             }
-        } else if ("POST".equals(method)) {
-            // TODO: Fix
-            // Retrieve data from the HTTP request
-            Pattern pattern = Pattern.compile("^api/submit/(\\d+)/(\\d+)/question/(\\d+)$");
-            Matcher matcher = pattern.matcher(url);
-            var found = matcher.find();
-            if (!found) {
-                throw new RuntimeException("Wrong path");
+            else if (url.startsWith("api/examattempts/")) {
+                Matcher matcher = generateMatcher(url, "^api/examattempts/(\\d+)/(\\d+)$");
+                var userIds = matcher.group(1);
+                int userId = Integer.parseInt(userIds.trim());
+                var examAttemptIds = matcher.group(2);
+                int examAttemptId = Integer.parseInt(examAttemptIds.trim());
+
+                return new ExamAttemptData().handle(Map.of(
+                        "userId", userId,
+                        "examAttemptId", examAttemptId
+                ));
             }
-            var userIds = matcher.group(1);
-            int userId = Integer.parseInt(userIds.trim());
-            var examAttempts = matcher.group(2);
-            int examAttempt = Integer.parseInt(examAttempts.trim());
-            var questionIds = matcher.group(3);
-            int questionId = Integer.parseInt(questionIds.trim());
+        }
+        else if ("POST".equals(method)) {
+            if (url.startsWith("api/submit/")){
+                //Ends Exam - sets done = true, edit timestamp of end_time
+                if (url.endsWith("/end")) {
+                    Matcher matcher = generateMatcher(url, "^api/submit/(\\d+)/end$");
+                    var examAttemptIds = matcher.group(1);
+                    int examAttemptId = Integer.parseInt(examAttemptIds.trim());
 
+                    return new EndExam().handle(Map.of(
+                            "examAttemptId", examAttemptId
+                    ));
+                }
+                else {
+                    Matcher matcher = generateMatcher(url, "^api/submit/(\\d+)/(\\d+)/question/(\\d+)$");
 
-            //Map<String, String> body = parseJsonBody(requestBody);
-            JSONObject body = new JSONObject(requestBody);
-            log.info("body{}", body);
-            String choice = body.getString("choice");
-            log.info("body.get(choice){}", choice);
+                    var userIds = matcher.group(1);
+                    int userId = Integer.parseInt(userIds.trim());
+                    var examAttempts = matcher.group(2);
+                    int examAttempt = Integer.parseInt(examAttempts.trim());
+                    var questionIds = matcher.group(3);
+                    int questionId = Integer.parseInt(questionIds.trim());
 
-            return new PAnswerOnExam().handle(Map.of(
-                    "userId", userId,
-                    "examAttempt", examAttempt,
-                    "questionId",questionId,
-                    "choice", choice
-            ));
+                    JSONObject body = new JSONObject(requestBody);
+                    log.info("body{}", body);
+                    String choice = body.getString("choice");
+                    log.info("body.get(choice){}", choice);
+
+                    return new PAnswerOnExam().handle(Map.of(
+                            "userId", userId,
+                            "examAttempt", examAttempt,
+                            "questionId",questionId,
+                            "choice", choice
+                    ));
+                }
+            }
+            //Starts Exam - sets done = false, edit timestamp of start_time
+            else if (url.startsWith("api/exam/")){
+                Matcher matcher = generateMatcher(url, "^api/exam/(\\d+)/(\\d+)/start$");
+                var userIds = matcher.group(1);
+                int userId = Integer.parseInt(userIds.trim());
+                var examIds = matcher.group(2);
+                int examId = Integer.parseInt(examIds.trim());
+
+                return new StartExam().handle(Map.of(
+                        "userId", userId,
+                        "examId", examId
+                ));
+            }
         }
         return Util.createErrorResponse("Path Not Found", 404);
     }
 
-    private static Map<String, String> parseJsonBody(String body) {
-        // Remove curly braces and split the string by ","
-        String[] keyValuePairs = body.replaceAll("[{}]", "").split(",");
-
-        Map<String, String> resultMap = new HashMap<>();
-
-        for (String pair : keyValuePairs) {
-            // Split each key-value pair by "="
-            String[] entry = pair.split("=");
-            if (entry.length == 2) {
-                // If the entry has a valid key-value pair, add it to the map
-                resultMap.put(entry[0].trim(), entry[1].trim());
-            } else {
-                // Handle invalid entries or log a warning
-                System.err.println("Invalid key-value pair: " + pair);
-            }
+    //Helper Functions
+    private static Matcher generateMatcher(String fullURL, String endingURL){
+        Pattern pattern = Pattern.compile(endingURL);
+        Matcher matcher = pattern.matcher(fullURL);
+        var found = matcher.find();
+        if (!found) {
+            throw new RuntimeException("Wrong path");
         }
-
-        return resultMap;
+        return matcher;
     }
 
 }
