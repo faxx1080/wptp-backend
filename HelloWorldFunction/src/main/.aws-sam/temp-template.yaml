@@ -1,0 +1,11 @@
+Resources:
+  Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      Timeout: 728
+      MemorySize: 512
+      Handler: helloworld.EntryPoint
+      CodeUri: C:\Users\Nikol\OneDrive\Documents\VirtualSATProject\example-java-rds\HelloWorldFunction
+      Runtime: java17
+      Architectures:
+        - arm64

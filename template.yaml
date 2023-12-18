@@ -80,7 +80,7 @@ Resources:
           - sg-0cccee1afe2649a03
           - sg-053ff6236c99e0591
       CodeUri: HelloWorldFunction
-      Handler: helloworld.GetQuestion::handleRequest
+      Handler: helloworld.EntryPoint::handleRequest
       # Handler: helloworld.StreamHandler::handleRequest
       Runtime: java17
       Role: arn:aws:iam::135218218645:role/API-Role
