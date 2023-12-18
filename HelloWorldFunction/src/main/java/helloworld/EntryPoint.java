@@ -80,7 +80,6 @@ public class EntryPoint implements RequestHandler<APIGatewayV2HTTPEvent, APIGate
             return createErrorResponse("An error occurred: ", e, 500, "{\"error\": \"Internal Server Error\"}");
         }
 
-
         return createSuccessResponse(200, jsonArray.toString());
     }
 

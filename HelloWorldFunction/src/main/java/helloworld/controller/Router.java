@@ -43,15 +43,15 @@ public class Router {
                         "questionNumber", questionNumber
                 ));
             }
+            //Returns some data about the exam
             else if (url.startsWith("api/examattempts/")) {
-                Matcher matcher = generateMatcher(url, "^api/examattempts/(\\d+)/(\\d+)$");
+                Matcher matcher = generateMatcher(url, "^api/examattempts/(\\d+)$");
                 var userIds = matcher.group(1);
                 int userId = Integer.parseInt(userIds.trim());
                 var examAttemptIds = matcher.group(2);
                 int examAttemptId = Integer.parseInt(examAttemptIds.trim());
 
                 return new ExamAttemptData().handle(Map.of(
-                        "userId", userId,
                         "examAttemptId", examAttemptId
                 ));
             }
