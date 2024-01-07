@@ -14,7 +14,10 @@ import static helloworld.util.Util.*;
 public class ExamAttemptData implements IController {
     @Override
     public Object handle(Map<String, Object> input) throws Exception {
-        var jsonArray = new JSONArray();
+        JSONArray breakdownArray = new JSONArray();
+        int questionCount = 0;
+        int answersSubmitted = 0;
+        int correctAnswers = 0;
         // Use a prepared statement to avoid SQL injection
         String sql = "SELECT\n" +
                 "    q.question_id,\n" +
@@ -47,24 +50,45 @@ public class ExamAttemptData implements IController {
                 int columnCount = metaData.getColumnCount();
 
                 while (rs.next()) {
-                    JSONObject jsonObject = new JSONObject();
+                    questionCount++;
 
-                    for (int i = 1; i <= columnCount; i++) {
-                        String columnName = metaData.getColumnName(i);
-                        Object columnValue = rs.getObject(i);
+                    JSONObject breakdownObject = new JSONObject();
 
-                        // Add each column to the JSON object dynamically
-                        jsonObject.put(columnName, columnValue);
+                    // Check for null before calling isEmpty()
+                    String choice = rs.getString("choice");
+                    boolean isSubmitted = choice != null && !choice.isEmpty();
+
+                    boolean isCorrect = false;
+                    if (isSubmitted) {
+                        isCorrect = choice.equalsIgnoreCase(rs.getString("correctanswerchoice"));
                     }
 
-                    jsonArray.put(jsonObject);
+                    if (isSubmitted) {
+                        answersSubmitted++;
+                    }
+                    if (isCorrect) {
+                        correctAnswers++;
+                    }
+
+                    breakdownObject.put("question_id", rs.getInt("question_id"));
+                    breakdownObject.put("tag", rs.getString("name"));
+                    breakdownObject.put("is_submitted", isSubmitted);
+                    breakdownObject.put("is_correct", isCorrect);
+                    breakdownObject.put("submitted_answer", rs.getString("choice"));
+                    breakdownObject.put("correct_answer", rs.getString("correctanswerchoice"));
+                    breakdownObject.put("explanation", rs.getString("answerexplanation"));
+
+                    breakdownArray.put(breakdownObject);
                 }
-                // Process the results, if needed
-                // ...
 
-                return jsonArray;
             }
-
         }
+            JSONObject result = new JSONObject();
+            result.put("question_count", questionCount);
+            result.put("answers_submitted", answersSubmitted);
+            result.put("correct_answers", correctAnswers);
+            result.put("breakdown", breakdownArray);
+
+            return result;
     }
 }
