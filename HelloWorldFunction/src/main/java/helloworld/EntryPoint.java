@@ -93,11 +93,12 @@ public class EntryPoint implements RequestHandler<APIGatewayV2HTTPEvent, APIGate
         return resultMap;
     }
 
-    private APIGatewayV2HTTPResponse createSuccessResponse(int status_code, String successMessage) {
-        //clone and add the content type: application.json
+    private APIGatewayV2HTTPResponse createSuccessResponse(int statusCode, String successMessage) {
+        var headers = new HashMap<String, String>(getCorsHeaders());
+        headers.put("Content-Type", "application/json");
         return APIGatewayV2HTTPResponse.builder()
-                .withStatusCode(status_code)
-                .withHeaders(getCorsHeaders())
+                .withStatusCode(statusCode)
+                .withHeaders(headers)
                 .withBody(successMessage) // TODO: Fix data types
                 .build();
     }
@@ -105,9 +106,11 @@ public class EntryPoint implements RequestHandler<APIGatewayV2HTTPEvent, APIGate
     private APIGatewayV2HTTPResponse createErrorResponse(String exceptionMessage, Exception e, int status_code, String errorMessage) {
         if (e != null)
             log.error(exceptionMessage, e);
+        var headers = new HashMap<String, String>(getCorsHeaders());
+        headers.put("Content-Type", "application/json");
         return APIGatewayV2HTTPResponse.builder()
                 .withStatusCode(status_code)
-                .withHeaders(getCorsHeaders())
+                .withHeaders(headers)
                 .withBody(errorMessage).build();
     }
 
