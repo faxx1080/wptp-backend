@@ -40,7 +40,6 @@ public class Util {
         corsHeaders.put("Access-Control-Allow-Origin", "https://main.d3t0eddq8sk7xv.amplifyapp.com"); // Allow requests from site
         corsHeaders.put("Access-Control-Allow-Headers", "Content-Type");
         corsHeaders.put("Access-Control-Expose-Headers", "*");
-        corsHeaders.put("Access-Control-Allow-Credentials", "true");
         corsHeaders.put("Access-Control-Allow-Methods", "OPTIONS,POST,GET"); // Add other HTTP methods if needed
     }
     public static Connection getDatabase() throws SQLException {
@@ -57,7 +56,7 @@ public class Util {
         JSONObject responseBody = new JSONObject();
         responseBody.put("error", errorMessage);
 
-        Map<String, String> headers = getCorsHeaders();
+        Map<String, String> headers = new HashMap<>(getCorsHeaders());
 
         return APIGatewayV2HTTPResponse.builder()
                 .withStatusCode(errorCode)
