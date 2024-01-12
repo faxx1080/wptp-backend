@@ -11,7 +11,7 @@ import java.util.Map;
 import static helloworld.util.Util.getDatabase;
 
 @Slf4j
-public class CAllQuestions implements IController {
+public class GAllQuestions implements IController {
 
     @Override
     public Object handle(Map<String, Object> input) throws Exception {

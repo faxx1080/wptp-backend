@@ -10,7 +10,7 @@ import java.util.Map;
 import static helloworld.util.Util.*;
 @Slf4j
 
-public class CQuestionOnExam implements IController {
+public class GQuestionOnExam implements IController {
     @Override
     public Object handle(Map<String, Object> input) throws Exception {
         // Use a prepared statement to avoid SQL injection

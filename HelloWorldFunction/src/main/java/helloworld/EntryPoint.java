@@ -29,12 +29,10 @@ public class EntryPoint implements RequestHandler<APIGatewayV2HTTPEvent, APIGate
     public APIGatewayV2HTTPResponse handleRequestInner(APIGatewayV2HTTPEvent input, Context context) throws Exception {
         logEnv(input, context);
         log.debug(input.getRequestContext().getHttp().getMethod());
+        handleOptionsRequest();
 
-
-        if ("OPTIONS".equals(input.getRequestContext().getHttp().getMethod())) {
-            // Handle pre-flight OPTIONS request
-            return handleOptionsRequest();
-        } else if ("GET".equals(input.getRequestContext().getHttp().getMethod())) {
+        if ("GET".equals(input.getRequestContext().getHttp().getMethod())) {
+            //
             return getRequest(input, context);
         } else if ("POST".equals(input.getRequestContext().getHttp().getMethod())) {
             // Retrieve data from the HTTP request
@@ -96,9 +94,10 @@ public class EntryPoint implements RequestHandler<APIGatewayV2HTTPEvent, APIGate
     }
 
     private APIGatewayV2HTTPResponse createSuccessResponse(int status_code, String successMessage) {
+        //clone and add the content type: application.json
         return APIGatewayV2HTTPResponse.builder()
                 .withStatusCode(status_code)
-                .withHeaders(Collections.singletonMap("Content-Type", "application/json"))
+                .withHeaders(getCorsHeaders())
                 .withBody(successMessage) // TODO: Fix data types
                 .build();
     }
@@ -108,7 +107,7 @@ public class EntryPoint implements RequestHandler<APIGatewayV2HTTPEvent, APIGate
             log.error(exceptionMessage, e);
         return APIGatewayV2HTTPResponse.builder()
                 .withStatusCode(status_code)
-                .withHeaders(Collections.singletonMap("Content-Type", "application/json"))
+                .withHeaders(getCorsHeaders())
                 .withBody(errorMessage).build();
     }
 

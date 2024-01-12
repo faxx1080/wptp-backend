@@ -6,14 +6,10 @@ import helloworld.util.Util;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static helloworld.util.Util.getDatabase;
 @Slf4j
 
 public class Router {
@@ -24,9 +20,19 @@ public class Router {
         String requestBody = input.getBody();
 
         if ("GET".equals(method)) {
+            //Returns name of user
+            if(url.equals("api/name/(\\d+)")){
+                Matcher matcher = generateMatcher(url, "^api/name/(\\d+)$");
+                var userIds = matcher.group(1);
+                int userId = Integer.parseInt(userIds.trim());
+
+                return new GQuestionOnExam().handle(Map.of(
+                        "examId", userId
+                ));
+            }
             //Returns ALL Questions
-            if (url.equals("api/questions/all")) {
-                return new CAllQuestions().handle(null);
+            else if (url.equals("api/questions/all")) {
+                return new GAllQuestions().handle(null);
             }
 
             // Returns Specified Question
@@ -38,18 +44,21 @@ public class Router {
                 var questionNumbers = matcher.group(2);
                 int questionNumber = Integer.parseInt(questionNumbers.trim());
 
-                return new CQuestionOnExam().handle(Map.of(
+                return new GQuestionOnExam().handle(Map.of(
                         "examId", examId,
                         "questionNumber", questionNumber
                 ));
             }
             //Returns some data about the examgit
             else if (url.startsWith("api/examattempts/")) {
-                Matcher matcher = generateMatcher(url, "^api/examattempts/(\\d+)$");
-                var examAttemptIds = matcher.group(1);
+                Matcher matcher = generateMatcher(url, "^api/examattempts/(\\d+)/(\\d+)$");
+                var userIds = matcher.group(1);
+                int userId = Integer.parseInt(userIds.trim());
+                var examAttemptIds = matcher.group(2);
                 int examAttemptId = Integer.parseInt(examAttemptIds.trim());
 
                 return new ExamAttemptData().handle(Map.of(
+                        "userId", userId,
                         "examAttemptId", examAttemptId
                 ));
             }
@@ -58,11 +67,14 @@ public class Router {
             if (url.startsWith("api/submit/")){
                 //Ends Exam - sets done = true, edit timestamp of end_time
                 if (url.endsWith("/end")) {
-                    Matcher matcher = generateMatcher(url, "^api/submit/(\\d+)/end$");
-                    var examAttemptIds = matcher.group(1);
+                    Matcher matcher = generateMatcher(url, "^api/submit/(\\d+)/(\\d+)/end$");
+                    var userIds = matcher.group(1);
+                    int userId = Integer.parseInt(userIds.trim());
+                    var examAttemptIds = matcher.group(2);
                     int examAttemptId = Integer.parseInt(examAttemptIds.trim());
 
                     return new EndExam().handle(Map.of(
+                            "userId", userId,
                             "examAttemptId", examAttemptId
                     ));
                 }
